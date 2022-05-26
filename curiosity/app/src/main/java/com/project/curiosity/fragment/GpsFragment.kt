@@ -1,53 +1,211 @@
 package com.project.curiosity.fragment
 
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.project.curiosity.MainActivity
+import com.github.mikephil.charting.animation.Easing
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.AxisBase
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.project.curiosity.R
 import com.project.curiosity.api.ApiClient
-import com.project.curiosity.databinding.GpsFragmentBinding
+import com.project.curiosity.databinding.GraphFragmentBinding
 import com.project.curiosity.model.Request
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlin.concurrent.thread
+import com.project.curiosity.model.Request2
+import com.project.curiosity.yongapi.ApiClient1
+import io.reactivex.Completable.timer
+import kotlinx.coroutines.*
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.concurrent.timer
 
-class GpsFragment: Fragment() {
-    private lateinit var binding: GpsFragmentBinding
+private var sensorList = ArrayList<sensor>()
+private var globalstring :String = ""
+private var globaltemp :String = ""
+private var globalhumi :String = ""
+
+class GraphFragment : Fragment() {
+    private lateinit var binding: GraphFragmentBinding
+    private lateinit var lineChart: LineChart
     private var job: Job? = null
 
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding = GpsFragmentBinding.inflate(inflater, container, false)
+        binding = GraphFragmentBinding.inflate(inflater, container, false)
+        val temp = binding.textViewTemp
+        val humi = binding.textViewHumi
+        val imageButton_temp = binding.imageButtonTemp
+        val imageButton_humi = binding.imageButtonHumi
 
-        val name = binding.deviceName
-        val search = binding.search
-        val time = binding.time
-        val result = binding.result
+        lineChart = binding.lineChart
 
-        search.setOnClickListener {
-            val id = (activity as MainActivity).getSpinnerData()
-            val wantTime = time.text.toString()
-            getData(id, wantTime)
+        val timer = timer(period = 10000){
+            getData1("curiosity", "2022-05-24 01:12")
         }
 
+        //var a = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) //"yyyy-MM-dd HH:mm:ss"
+
+        imageButton_temp.setOnClickListener {
+            sensorList.clear();
+        }
+
+        imageButton_humi.setOnClickListener {
+            humi.setText(globalstring)
+        }
+
+        initLineChart()
+        setDataToLineChart()
+
         return binding.root
+    }
+
+    private fun main(args: Array<String>){
+        val date = Date()
+    }
+
+
+    private fun initLineChart() {
+
+        lineChart.axisLeft.setDrawGridLines(false)
+        val xAxis: XAxis = lineChart.xAxis
+        xAxis.setDrawGridLines(false)
+        xAxis.setDrawAxisLine(false)
+
+        //remove right y-axis
+        lineChart.axisRight.isEnabled = false
+
+        //remove legend
+        lineChart.legend.isEnabled = false
+
+
+        //remove description label
+        lineChart.description.isEnabled = false
+
+
+        //add animation
+        lineChart.animateX(1000, Easing.EaseInSine)
+
+        // to draw label on xAxis
+        xAxis.setDrawAxisLine(true)
+        xAxis.position = XAxis.XAxisPosition.BOTTOM
+        xAxis.valueFormatter = MyAxisFormatter()
+        xAxis.setDrawLabels(true)
+        xAxis.granularity = 1f
+        xAxis.axisLineColor
 
     }
 
-    private fun getData(nameValue: String, timeValue:String) {
+
+    inner class MyAxisFormatter : IndexAxisValueFormatter() {
+
+        override fun getAxisLabel(value: Float, axis: AxisBase?): String {
+            val index = value.toInt()
+            return if (index < sensorList.size) {
+                sensorList[index].name
+            } else {
+                ""
+            }
+        }
+    }
+
+    private fun change_string() {
+        globalstring = "hello"
+        print(globalstring)
+        Log.d("globalstring2:","${globalstring}")
+    }
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun setDataToLineChart() {
+        //now draw bar chart with dynamic data
+        val entries: ArrayList<Entry> = ArrayList()
+
+        sensorList = getsensorList()
+
+        //you can replace this data object with  your custom object
+        for (i in sensorList.indices) {
+            val sensor = sensorList[i]
+            entries.add(Entry(i.toFloat(), sensor.temp.toFloat()))
+        }
+
+        val lineDataSet = LineDataSet(entries, "")
+
+        val data = LineData(lineDataSet)
+        lineChart.data = data
+
+        lineDataSet.setDrawFilled(true)
+        lineDataSet.fillDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.gradient)
+        lineDataSet.setColor(Color.parseColor("#6441A5"))
+        lineDataSet.setCircleColor(Color.DKGRAY);
+
+        lineChart.invalidate()
+    }
+
+    // simulate api call
+    // we are initialising it directly
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getsensorList(): ArrayList<sensor> {
+        var a = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:00"))
+        sensorList.add(sensor(a, 30))
+        sensorList.add(sensor("06:00", 20))
+        sensorList.add(sensor("07:00", 24))
+        sensorList.add(sensor("08:00", 36))
+        sensorList.add(sensor("09:00", 25))
+
+        return sensorList
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun TempList(): ArrayList<sensor> {
+        var a = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:00"))
+        sensorList.add(sensor(a, 30))
+        sensorList.add(sensor("06:00", 20))
+        sensorList.add(sensor("07:00", 24))
+        sensorList.add(sensor("08:00", 36))
+        sensorList.add(sensor("09:00", 25))
+
+        return sensorList
+    }
+
+
+    private fun getData1(nameValue: String, timeValue: String) {
         job = CoroutineScope(Dispatchers.IO).launch {
-            val request = Request(nameValue, timeValue)
-            val response = ApiClient.getApiClient().getData(request)
-            if(response.isSuccessful && response.body()!!.statusCode ==200)
-                requireActivity().runOnUiThread{ binding.result.text = response.body().toString() }
+            val request = Request2(nameValue, timeValue)
+            val response = ApiClient1.getApiClient1().getData1(request)
+            if (response.isSuccessful && response.body()!!.statusCode == 200)
+                globalstring = response.body().toString()
+            val number = globalstring.replace("[^0-9]".toRegex(), "")
+            Log.d("number","${globalstring}")
+            val number1 = number.substring(number.length-4, number.length)
+            Log.d("number1","${number1}")
+            globaltemp = number1.substring(0 until 2)
+            globalhumi = number1.substring(2 until 4)
+            var b = globaltemp
+            requireActivity().runOnUiThread {
+//                        binding.result.text = response.body().toString()
+                binding.textViewTemp.setText(globaltemp)
+                binding.textViewHumi.setText(globalhumi)
+            }
         }
     }
 }
