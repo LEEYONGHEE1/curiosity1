@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.IntegerRes
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -20,15 +19,10 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.project.curiosity.R
-import com.project.curiosity.api.ApiClient
 import com.project.curiosity.databinding.GraphFragmentBinding
-import com.project.curiosity.model.Request
 import com.project.curiosity.model.Request2
 import com.project.curiosity.yongapi.ApiClient1
-import io.reactivex.Completable.timer
 import kotlinx.coroutines.*
-import java.text.SimpleDateFormat
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -65,6 +59,7 @@ class GraphFragment : Fragment() {
 
         lineChart = binding.lineChart
 
+
         val timer = timer(period = 10000){
             getData1("curiosity", "")
         }
@@ -72,7 +67,7 @@ class GraphFragment : Fragment() {
         //var a = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) //"yyyy-MM-dd HH:mm:ss"
 
         imageButton_temp.setOnClickListener {
-            getsensorList()
+            getsensorList().add("20",11)
         }
 
         imageButton_humi.setOnClickListener {
@@ -110,6 +105,8 @@ class GraphFragment : Fragment() {
 
         //add animation
         lineChart.animateX(1000, Easing.EaseInSine)
+
+        lineChart.setDragXEnabled(true);
 
         // to draw label on xAxis
         xAxis.setDrawAxisLine(true)
@@ -167,16 +164,16 @@ class GraphFragment : Fragment() {
         lineChart.invalidate()
     }
 
-    // simulate api call
-    // we are initialising it directly
+
     @RequiresApi(Build.VERSION_CODES.O)
     private fun getsensorList(): ArrayList<sensor> {
-        sensorList.add(sensor("02", 30))
-        sensorList.add(sensor("03", 40))
-        sensorList.add(sensor("04", 20))
+        sensorList.add(sensor("00",0 ))
+        sensorList.add(sensor("01",12))
+
 
         return sensorList
     }
+
 
     private fun getData1(nameValue: String, timeValue: String) {
         job = CoroutineScope(Dispatchers.IO).launch {
@@ -200,6 +197,11 @@ class GraphFragment : Fragment() {
         }
     }
 }
+
+
+
+
+
 
 
 
