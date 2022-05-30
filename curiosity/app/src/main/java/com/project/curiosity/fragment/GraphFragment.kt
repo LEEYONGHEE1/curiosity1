@@ -284,7 +284,7 @@ class GraphFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun getsensorList(): ArrayList<sensor> {
         sensorList.add(sensor("00", 0))
-        sensorList.add(sensor(local_time, 20))
+        sensorList.add(sensor(local_time, 0))
 
         return sensorList
     }
@@ -293,12 +293,10 @@ class GraphFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun getsensorList1(): ArrayList<sensor1> {
         sensorList1.add(sensor1("00", 0))
-        sensorList1.add(sensor1(local_time, 40))
+        sensorList1.add(sensor1(local_time, 0))
 
         return sensorList1
     }
-
-
 
 
     private fun getData1(nameValue: String, timeValue: String) {
@@ -313,28 +311,26 @@ class GraphFragment : Fragment() {
             globaltemp = number1.substring(0 until 2)
             globalhumi = number1.substring(2 until 4)
             globaltime = time1.substring(0 until 2)
+            var compare_name = sensorList.get(globalcount).name
+            var compare_temp = sensorList.get(globalcount).temp
+            var compare_humi = sensorList1.get(globalcount).humi
+            Log.d("비교", "${globaltime},${compare_name}")
+            if (globaltime == compare_name) {
+                if (compare_temp < Integer.parseInt(globaltemp)) {
+                    sensorList.set(globalcount, sensor(globaltime, Integer.parseInt(globaltemp)))}
+                if(compare_humi < Integer.parseInt(globalhumi)){
+                    sensorList1.set(globalcount, sensor1(globaltime, Integer.parseInt(globalhumi)))
+                }
+            }
+
+            else {
+                globalcount += 1
+                sensorList.add(sensor(globaltime, Integer.parseInt(globaltemp)))
+                sensorList1.add(sensor1(globaltime, Integer.parseInt(globalhumi)))
+            }
             requireActivity().runOnUiThread {
                 binding.textViewTemp.setText(globaltemp)
                 binding.textViewHumi.setText(globalhumi)
-                var compare_name = sensorList.get(globalcount).name
-                var compare_temp = sensorList.get(globalcount).temp
-                var compare_humi = sensorList1.get(globalcount).humi
-                Log.d("비교", "${globaltime},${compare_name}")
-                if (globaltime == compare_name) {
-                    if (compare_temp < Integer.parseInt(globaltemp)) {
-                        sensorList.set(globalcount, sensor(globaltime, Integer.parseInt(globaltemp)))
-                        if(compare_humi < Integer.parseInt(globalhumi)){
-                            sensorList1.set(globalcount, sensor1(globaltime, Integer.parseInt(globalhumi)))
-                        }
-                    }
-                }
-                else {
-                    globalcount += 1
-                    sensorList.add(sensor(globaltime, Integer.parseInt(globaltemp)))
-                    sensorList1.add(sensor1(globaltime, Integer.parseInt(globalhumi)))
-                }
-
-                Log.d("list", "${sensorList},${globalcount}")
 
             }
         }
