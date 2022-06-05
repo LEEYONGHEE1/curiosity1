@@ -1,6 +1,7 @@
 package com.project.curiosity.fragment
 import android.accounts.AccountManager.get
 import android.app.DatePickerDialog
+import android.bluetooth.BluetoothAdapter.ERROR
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -25,6 +26,8 @@ import com.project.curiosity.databinding.GraphFragmentBinding
 import com.project.curiosity.model.Request2
 import com.project.curiosity.yongapi.ApiClient1
 import kotlinx.coroutines.*
+import okhttp3.internal.concurrent.TaskRunner.Companion.logger
+import java.lang.Exception
 import java.lang.reflect.Array.get
 import java.nio.file.Paths.get
 import java.time.LocalDateTime
@@ -41,9 +44,10 @@ private var globalstring :String = ""
 private var globaltime :String = ""
 private var globaltemp :Int = 0
 private var globalhumi :Int = 0
-var globalcount = 1
+var globalcount = 0
 var global_state = 1
 var calendar_state = 1
+var state = 0
 var dateString = ""
 @RequiresApi(Build.VERSION_CODES.O)
 private var local_time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH"))
@@ -81,9 +85,6 @@ class GraphFragment : Fragment() {
         val timer = timer(period = 10000) {
             getData1("curiosity", "")
         }
-
-        //var a = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) //"yyyy-MM-dd HH:mm:ss"
-
         imageButton_temp.setOnClickListener {
             global_state = 1
             setDataToLineChart_renew()
@@ -109,8 +110,6 @@ class GraphFragment : Fragment() {
             }
             DatePickerDialog(requireActivity(), dateSetListener, cal.get(Calendar.YEAR),cal.get(Calendar.MONTH),cal.get(Calendar.DAY_OF_MONTH)).show()
         }
-
-
 
         imageButton_humi_serach.setOnClickListener {
             calendar_state = 2
@@ -564,7 +563,10 @@ class GraphFragment : Fragment() {
             val request = Request2(nameValue, timeValue)
             val response = ApiClient1.getApiClient1().getData1(request)
             if (response.isSuccessful && response.body()!!.statusCode == 200) {
-
+                if(state == 0) {
+                    sensorList.removeAt(1)
+                    sensorList1.removeAt(1)
+                }
                 globaltime = response.body()!!.body[0].timestamp
                 globaltemp = response.body()!!.body[0].temperature
                 globalhumi = response.body()!!.body[0].humidity
@@ -585,9 +587,10 @@ class GraphFragment : Fragment() {
                     globalcount += 1
                     sensorList.add(sensor(globaltime, globaltemp))
                     sensorList1.add(sensor1(globaltime, globalhumi))
+                    state += 1
                 }
             }
-            else if (response.isSuccessful && response.body()!!.statusCode == 300) {
+            else if (response.isSuccessful && response.body()!!.statusCode == 201) {
                 var i = 0
                 var count = response.body()!!.length
                 sensorList2.clear()
@@ -609,10 +612,9 @@ class GraphFragment : Fragment() {
                 else
                     setDataToLineChart_renew_humi1()
             }
-            else if (response.isSuccessful && response.body()!!.statusCode == 100) {
-                Toast.makeText(getActivity(), "myText", Toast.LENGTH_SHORT).show();
-            }
+            else if(response.isSuccessful && response.body()!!.statusCode == 204){
 
+            }
             requireActivity().runOnUiThread {
                 binding.textViewTemp.setText(globaltemp.toString())
                 binding.textViewHumi.setText(globalhumi.toString())
