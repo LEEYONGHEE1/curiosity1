@@ -646,8 +646,16 @@ class GraphFragment : Fragment() {
     fun setGraph2(data:Body) {
         sensorList.clear()
         sensorList1.clear()
+        sensorList2.clear()
+        sensorList3.clear()
+        getSensorList2()
+        getSensorList3()
         sensorList.add(sensor("", 0))
         sensorList1.add(sensor1("", 0))
+
+        setDataToLineChartRenewTemperature()
+        setDataToLineChartRenewHumidity1()
+
         globalTime = data.timestamp
         globalTemperature = data.temperature
         globalHumidity = data.humidity
@@ -656,6 +664,8 @@ class GraphFragment : Fragment() {
         sensorList.add(sensor(globalTime, globalTemperature))
         sensorList1.add(sensor1(globalTime, globalHumidity))
         requireActivity().runOnUiThread {
+            binding.temp.setText("")
+            binding.humitext1.setText("")
             binding.textViewTemp.text = globalTemperature.toString()
             binding.textViewHumi.text = globalHumidity.toString()
             if (globalState == 1)
