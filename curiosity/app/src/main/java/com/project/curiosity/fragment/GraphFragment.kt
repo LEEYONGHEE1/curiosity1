@@ -611,12 +611,19 @@ class GraphFragment : Fragment() {
             val compareTemperature = sensorList[globalCount].temp
             val compareHumidity = sensorList1[globalCount].humi
             if (globalTime == compareName) {
-                if (compareTemperature < globalTemperature) {
-                    sensorList[globalCount] = sensor(globalTime, globalTemperature)
+                if(globalTemperature >=0){
+                    if (compareTemperature < globalTemperature) {
+                        sensorList[globalCount] = sensor(globalTime, globalTemperature)
+                    }
+                    if(compareHumidity < globalHumidity){
+                        sensorList1[globalCount] = sensor1(globalTime, globalHumidity)
+                    }
+                }else{
+                    if (compareTemperature > globalTemperature) {
+                        sensorList[globalCount] = sensor(globalTime, globalTemperature)
+                    }
                 }
-                if(compareHumidity < globalHumidity){
-                    sensorList1[globalCount] = sensor1(globalTime, globalHumidity)
-                }
+
             }
             else {
                 globalCount += 1
