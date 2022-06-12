@@ -133,7 +133,7 @@ class GraphFragment : Fragment() {
         else if((view.id.toString() == binding.imageButton6.id.toString()))
             calendarState = 2
 
-        DatePickerDialog(requireActivity(), dateSetListener, calendar.get(Calendar.YEAR),calendar.get(Calendar.MONTH),calendar.get(Calendar.DAY_OF_MONTH)).show()
+        DatePickerDialog(requireActivity(), R.style.DialogTheme, dateSetListener, calendar.get(Calendar.YEAR),calendar.get(Calendar.MONTH),calendar.get(Calendar.DAY_OF_MONTH)).show()
     }
 
 
@@ -508,6 +508,7 @@ class GraphFragment : Fragment() {
 
         val data = LineData(lineDataSet)
         lineChart3.data = data
+
         lineDataSet.setDrawFilled(true)
         lineDataSet.fillDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.gradient1)
         lineDataSet.color = Color.parseColor("#6441A5")
