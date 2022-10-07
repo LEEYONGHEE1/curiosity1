@@ -105,7 +105,7 @@ class GraphFragment : Fragment() {
                 else
                     "${year}-${month+1}-${dayOfMonth}"
             }
-            getSpecificData((activity as MainActivity).getSpinnerData(), dateString)
+            (activity as MainActivity).getDataCalendar(dateString)
             if(calendarState == 1)
                 temperatureText.text = dateString
             else if(calendarState == 2)
@@ -139,11 +139,16 @@ class GraphFragment : Fragment() {
         }
 
         (activity as MainActivity).viewModel.specificData.observe(viewLifecycleOwner) {
+            if(it[0].deviceID != now) {
+                now = it[0].deviceID
+                setGraph2(it[0])
+            }else {
+                var type = "True"
+                var datasize = it.size
+                getSpecificData(it, datasize, type)
 
+            }
         }
-
-
-
 
         initLineChart()
         setDataToLineChartHumidity()
@@ -428,41 +433,32 @@ class GraphFragment : Fragment() {
 
     // 날짜 그래프 갱신
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun getSpecificData(data:Body){
+    fun getSpecificData(data: MutableList<Body>, length: Int, type: String){
         job = CoroutineScope(Dispatchers.IO).launch {
-            var i = 0
-            val count = data.body()!!.length
-            sensorList2.clear()
-            sensorList3.clear()
-            sensorList2.add(sensor("", 0))
-            sensorList3.add(sensor1("", 0))
-            while (i < count) {
-                var a = response.body()!!.body[i].timestamp
-                val b = response.body()!!.body[i].temperature
-                val c = response.body()!!.body[i].humidity
-                val time2 = a.substring(a.length - 5, a.length)
-                a = time2.substring(0 until 2)
-                sensorList2.add(sensor(a, b))
-                sensorList3.add(sensor1(a, c))
-                i += 1
-
+            if(type == "True") {
+                var i = 0
+                val count = length
+                sensorList2.clear()
+                sensorList3.clear()
+                sensorList2.add(sensor("", 0))
+                sensorList3.add(sensor1("", 0))
+                while (i < count) {
+                    var a = data[i].timestamp
+                    val b = data[i].temperature
+                    val c = data[i].humidity
+                    val time2 = a.substring(a.length - 8, a.length)
+                    a = time2.substring(0 until 2)
+                    sensorList2.add(sensor(a, b))
+                    sensorList3.add(sensor1(a, c))
+                    i += 1
+                }
                 if (calendarState == 1)
                     setDataToLineChartRenewTemperature()
                 else
                     setDataToLineChartRenewHumidity1()
             }else{
-            sensorList2.clear()
-            sensorList3.clear()
-            sensorList2.add(sensor("", 0))
-            sensorList2.add(sensor("", 0))
-            sensorList3.add(sensor1("", 0))
-            sensorList3.add(sensor1("", 0))
-            if(calendarState == 1)
-                setDataToLineChartRenewTemperature()
-            else
-                setDataToLineChartRenewHumidity1()
-            requireActivity().runOnUiThread { Toast.makeText(requireActivity(), "선택한 날짜의 저장된 정보가 없습니다.", Toast.LENGTH_SHORT).show() }
-        }
+                print("error~~~~~!!!!1")
+            }
         }
     }
 
