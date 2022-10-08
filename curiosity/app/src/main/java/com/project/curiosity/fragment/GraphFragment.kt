@@ -16,7 +16,9 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.LineChart
@@ -146,9 +148,14 @@ class GraphFragment : Fragment() {
                 var type = "True"
                 var datasize = it.size
                 getSpecificData(it, datasize, type)
-
             }
         }
+
+        viewModel.specificDataError.observe(this, Observer {
+            it.getContentIfNotHandled()?.let {
+                Toast.makeText(requireActivity(), "a", Toast.LENGTH_SHORT).show()
+            }
+        })
 
         initLineChart()
         setDataToLineChartHumidity()
@@ -159,6 +166,25 @@ class GraphFragment : Fragment() {
         setDataToLineChart3()
 
         return binding.root
+    }
+
+    open class Event<out T>(private val content: T) {
+        var hasBeenHandled = false
+            private set
+
+        fun getContentIfNotHandled(): T? {
+            return if (hasBeenHandled) { // 이벤트가 이미 처리 되었다면
+                null // null을 반환하고,
+            } else { // 그렇지 않다면
+                hasBeenHandled = true // 이벤트가 처리되었다고 표시한 후에
+                content // 값을 반환합니다.
+            }
+        }
+
+        /**
+         * 이벤트의 처리 여부에 상관 없이 값을 반환합니다.
+         */
+        fun peekContent(): T = content
     }
 
     private fun getDate(view:View){
@@ -268,8 +294,6 @@ class GraphFragment : Fragment() {
 
         //now draw bar chart with dynamic data
         val entries: ArrayList<Entry> = ArrayList()
-
-
 
         //you can replace this data object with  your custom object
         for (i in sensorList.indices) {
@@ -421,6 +445,7 @@ class GraphFragment : Fragment() {
     private fun getSensorList2(): ArrayList<sensor> {
         sensorList2.add(sensor("", 0))
         sensorList2.add(sensor("", 0))
+
         return sensorList2
     }
     // humidity1
@@ -428,6 +453,7 @@ class GraphFragment : Fragment() {
     private fun getSensorList3(): ArrayList<sensor1> {
         sensorList3.add(sensor1("", 0))
         sensorList3.add(sensor1("", 0))
+
         return sensorList3
     }
 
