@@ -170,6 +170,7 @@ class GraphFragment : Fragment() {
     }
 
 
+
     private fun getDate(view:View){
         if(view.id.toString() == binding.TemperatureButton.id.toString())
             calendarState = 1
