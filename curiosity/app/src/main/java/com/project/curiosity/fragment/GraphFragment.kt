@@ -4,7 +4,6 @@ import android.app.DatePickerDialog
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,14 +16,10 @@ import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.formatter.IValueFormatter
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
-import com.github.mikephil.charting.formatter.ValueFormatter
-import com.github.mikephil.charting.utils.ViewPortHandler
 import com.project.curiosity.MainActivity
 import com.project.curiosity.R
 import com.project.curiosity.databinding.GraphFragmentBinding
@@ -34,11 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.text.DecimalFormat
 import java.util.*
-
-
-
 
 class GraphFragment : Fragment() {
     private lateinit var binding: GraphFragmentBinding
@@ -133,19 +124,23 @@ class GraphFragment : Fragment() {
         }
 
         viewModel.specificData.observe(viewLifecycleOwner) {
-            if(it[0].deviceID != now) {
-                now = it[0].deviceID
-                setGraph2(it[0])
-            }else {
-                val type = "True"
-                val datasize = it.size
-                getSpecificData(it, datasize, type)
-            }
+            val type = "True"
+            val datasize = it.size
+            getSpecificData(it, datasize, type)
+
+
         }
 
         viewModel.specificErrorData.observe(viewLifecycleOwner) {
             it.getContentIfNotHandled()?.let{
-                Log.d("처리중" , "데이터 변함!")
+                if(calendarState == 1) {
+                    sensorList2.clear()
+                    getSensorList2()
+                    setDataToLineChartRenewTemperature()}
+                else if(calendarState == 2){
+                    sensorList3.clear()
+                    getSensorList3()
+                    setDataToLineChartRenewHumidity1()}
                 requireActivity().runOnUiThread { Toast.makeText(context, "선택한 날짜의 정보가 없습니다.", Toast.LENGTH_SHORT).show() }
             }
         }
@@ -261,13 +256,13 @@ class GraphFragment : Fragment() {
         xAxis.setDrawAxisLine(true)
         xAxis.position = XAxis.XAxisPosition.BOTTOM
         xAxis.valueFormatter = MyAxisFormatter3()
+
         xAxis.setDrawLabels(true)
         xAxis.granularity = 1f
+
         xAxis.axisLineColor
 
     }
-
-
 
     //temp, humi
     inner class MyAxisFormatter : IndexAxisValueFormatter() {
@@ -552,6 +547,10 @@ class GraphFragment : Fragment() {
                 val count = length
                 sensorList2.clear()
                 sensorList3.clear()
+                if(count <= 1 && calendarState == 1)
+                    sensorList2.add(sensor("", 0))
+                else if (count <= 1 && calendarState == 2)
+                    sensorList3.add(sensor1("", 0))
                 while (i < count) {
                     var a = data[i].timestamp
                     val b = data[i].temperature
@@ -656,12 +655,10 @@ class GraphFragment : Fragment() {
                     setDataToLineChartRenew()
                 else
                     setDataToLineChartRenewHumidity()
-
             }
         }catch (e: Exception){
             //
         }
-
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
