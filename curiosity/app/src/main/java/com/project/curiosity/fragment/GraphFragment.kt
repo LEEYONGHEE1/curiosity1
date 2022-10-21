@@ -118,6 +118,8 @@ class GraphFragment : Fragment() {
         viewModel.roverData.observe(viewLifecycleOwner) {
             if(it.deviceID != now) {
                 now = it.deviceID
+                state = 0
+                globalCount = 0
                 setGraph2(it)
             }else
                 setGraph(it)
