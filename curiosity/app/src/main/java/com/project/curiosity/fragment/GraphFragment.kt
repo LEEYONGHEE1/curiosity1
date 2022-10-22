@@ -530,6 +530,7 @@ class GraphFragment : Fragment() {
     private fun getSensorList2(): ArrayList<sensor> {
         sensorList2.add(sensor("", 0))
         sensorList2.add(sensor("", 0))
+
         return sensorList2
     }
     // humidity1
@@ -537,6 +538,7 @@ class GraphFragment : Fragment() {
     private fun getSensorList3(): ArrayList<sensor1> {
         sensorList3.add(sensor1("", 0))
         sensorList3.add(sensor1("", 0))
+
         return sensorList3
     }
 
